@@ -1,6 +1,8 @@
 # Exercícios de Regressão Linear Simples - Base de Dados: Poluentes
 #Autor: André Cunha
 
+##Atividade duplicada neste repositório, código atualizado: atividade 4 - Regressão Linear Simples
+
 # Bibiliotecas necessárias
 library(ggplot2)
 library(corrplot)
