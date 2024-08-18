@@ -16,12 +16,12 @@ View(dados_vento)
 # Passo 1: a fim de tentar identificar uma correlação de maneira superficial, 
 # é necessário fazer um diagrama de dispersão e identificar se a mesma existe e qual a sua relevãncia:
 
-ggplot(data = dados_vento, aes( x = t, y = vt)) +
-  geom_point() +
-  theme_classic() +
-  xlab("dias") +
-  ylab("velocidade do vento") +
-  geom_smooth(method = "lm", se = FALSE)
+ggplot(data = dados_vento, aes( x = t, y = vt)) + # Adiciona a função ggplot, informa a base de dados e indica os eixos
+  geom_point() + # define o estilo do gráfico como diagrama de dispersão
+  theme_classic() + # define o tema do background do gráfico
+  xlab("dias") +  # Título do eixo x
+  ylab("velocidade do vento") + # Título do eixo y
+  geom_smooth(method = "lm", se = FALSE) # Adiciona a reta ao gráfico e não considera os intervalos de confiança
 
     # Neste diagrama de dispesão é possível identificar uma correlação negativa dos valores,
     # entretanto, é apenas uma conclusão superficial.
