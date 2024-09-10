@@ -15,12 +15,6 @@ library(caret)
 zumbis <- read_csv("zumbis.csv")
 View(zumbis)
 
-# 0º passo: identifique as correlações mais relevantes (necessário que os dados sejam numéricos)
-Matriz <- cor(zumbis)
-
-# Imprime a matriz
-corrplot(Matriz, method = "number")
-
 #########################
 # 1º passo: Renomeie as variáveis do banco de dados
 #########################
@@ -251,3 +245,6 @@ status <- predict(modelo, newdata = data.frame(area_residencia = "Urbana",
 status_final <- ifelse(status > 0.5, "Zumbi", "Humano")   
 
 print(status_final)
+#########################
+###    FIM   ###
+#########################
