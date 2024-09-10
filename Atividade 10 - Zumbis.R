@@ -1,6 +1,6 @@
 ### Atividade 10 - Base de dados Zombies ###
   
-  # Autor: André Cunha
+  # Autor: André Cunha e Vitória Mattedi
 #Orientador: Guilherme GUilhermino Neto
 
 # Bibliotecas:
