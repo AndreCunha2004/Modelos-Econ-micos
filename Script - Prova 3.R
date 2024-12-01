@@ -3,10 +3,22 @@
 # Alunos: André Cunha e Rayane Cardoso - (19/11 até 10/12)
 #############################################################
 
-# Pacotes
-library(readr)
-library(ggplot2)
-library(dplyr)
+# instalação de Pacotes
+install.packages("MASS")
+install.packages("rattle")
+install.packages("rpart")
+install.packages("rpart.plot")
+
+# Carregamento de pacotes
+library(readr)        # Leitura de arquivos
+library(ggplot2)      # Gráficos
+library(dplyr)        # Manipulação de dados
+library(class)        # kNN
+library(caret)        # Métricas e validação cruzada
+library(MASS)         # Naive Bayes
+library(rpart)        # Árvores de decisão
+library(rattle)       # Visualização de árvores
+library(rpart.plot)   # Plotagem de árvores
 
 # Carregando Data source
 dados <- read_csv("C:/Users/andre/OneDrive/GRADUAÇÃO_ENPRO/ENPRO 4/Modelos Econômicos Quantitativos/Provas/Prova 3/Dataset-minas terrestres.csv")
@@ -54,8 +66,6 @@ table(dados_teste$M)
 ########################
 # 3 – Para o kNN:
 ########################
-library(class) # Para o kNN
-library(caret) # Para métricas e validação cruzada
 
 # Normalizando os dados - 
   # É importante pois o algoritmo calcula a distância entre os
@@ -185,5 +195,69 @@ acuracia_nb <- sum(diag(matriz_confusao_nb)) / sum(matriz_confusao_nb)
 cat("Acurácia do Naive Bayes:",acuracia_nb, "ou", round(acuracia_nb * 100, 2), "%\n")
 
 #############################
-# Fim da entrega PARCIAL
+# Fim da entrega PARCIAL - 1
+#############################
+
+################################
+# 5 – Para a Árvore de Decisão:
+################################
+
+# a) Ajustando o modelo com a amostra de treino
+modelo_arvore <- rpart(M ~ ., data = dados_treino, method = "class")
+
+# b.1) Fazendo predições com a amostra de teste
+pred_arvore <- predict(modelo_arvore, newdata = dados_teste, type = "class")
+
+# b.2) Exibindo a matriz de confusão
+matriz_confusao_arvore <- confusionMatrix(
+  data = factor(pred_arvore),         # Predições da árvore
+  reference = factor(dados_teste$M),  # Rótulos reais
+  positive = "1"                      # Especifica a classe positiva
+)
+
+print(matriz_confusao_arvore)
+
+# c) Determinando a acurácia do método Árvore de Decisão
+
+# c.1) Acessando apenas a matriz de confusão (tabela) dentro do objeto
+matriz_confusao_arvore <- confusionMatrix(
+  data = factor(pred_arvore),
+  reference = factor(dados_teste$M),
+  positive = "1"
+)$table
+
+# c.2) Calculando a acurácia - Automatizando a leitura da matriz de confusão
+acuracia_arvore <- sum(diag(matriz_confusao_arvore)) / sum(matriz_confusao_arvore)
+cat("Acurácia da Árvore de Decisão:", acuracia_arvore, "ou", round(acuracia_arvore * 100, 2), "%\n")
+
+# d.1) Determinando a importância das variáveis no modelo ajustado
+importancia_variaveis <- modelo_arvore$variable.importance
+cat("\nImportância das variáveis:\n")
+print(importancia_variaveis)
+
+# d.2) Gráfico da importância das variáveis
+barplot(importancia_variaveis,
+        main = "Importância das Variáveis",
+        col = "purple2",
+        las = 2, 
+        horiz = FALSE,
+        xlab = "Variáveis", ylab = "Importância")
+
+# e) Visualização da árvore de decisão
+# e.1) 1º forma de plotar a árvore de decisão (pacote rattle)
+fancyRpartPlot(modelo_arvore)
+
+# e.2) 2ª forma de plotar a árvore de forma mais detalhada (pacote rpart.plot)
+rpart.plot(
+  modelo_arvore, 
+  type = 2,               # Tipo de plot (2 = texto nos nós)
+  extra = 104,            # Mostra porcentagens e contagens
+  fallen.leaves = TRUE,   # Coloca os nós terminais no mesmo nível
+  shadow.col = "gray",    # Adiciona sombra para profundidade
+  box.palette = "BuGn",   # Paleta de cores para os nós
+  main = "Árvore de Decisão - Visualização Detalhada"
+)
+
+#############################
+# Fim da entrega PARCIAL - 2
 #############################
