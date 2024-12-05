@@ -15,7 +15,7 @@ library(ggplot2)      # Gráficos
 library(dplyr)        # Manipulação de dados
 library(class)        # kNN
 library(caret)        # Métricas e validação cruzada
-library(MASS)         # Naive Bayes
+library(MASS)         # Naive Bayes 
 library(rpart)        # Árvores de decisão
 library(rattle)       # Visualização de árvores
 library(rpart.plot)   # Plotagem de árvores
@@ -85,9 +85,9 @@ dados_normalizados$M <- dados$M
 dados_treino_norm <- dados_normalizados[sorteio, ]
 dados_teste_norm <- dados_normalizados[-sorteio, ]
 
-# a) Testar diferentes valores de k e calcular acurácia
+# a) Preenchendo o vetor de valores de acurácia
 acuracias <- c()
-ks <- 1:20 # Vetor para testar os valores de k de 1 a 20
+ks <- 1:20
 
 for (k in ks) {
   pred <- knn(
@@ -103,8 +103,8 @@ for (k in ks) {
 }
 
 # Gráfico ocm número de vizinhos versus a acurácia
-plot(ks, acuracias, type = "b", # conecta os pontos com linhas e também exibe os marcadores de cada ponto
-     col = "purple", pch = 19, # Define o formato e tamanho dos marcadores nos pontos do gráfico.
+plot(ks, acuracias, type = "b", # conecta os pontos com linhas e exibe os marcadores
+     col = "purple", pch = 19, # Define formato e tamanho dos marcadores
      xlab = "Número de vizinhos (k)", 
      ylab = "Acurácia", 
      main = "Acurácia para diferentes valores de k")
@@ -261,3 +261,70 @@ rpart.plot(
 #############################
 # Fim da entrega PARCIAL - 2
 #############################
+
+#############################
+# 7 - Regressão Logística
+#############################
+
+# a.1) ajustando o modelo
+modelo_logistico <- glm(M ~ ., data = dados_treino, family = binomial)
+
+# a.2) Exibindo o modelo
+summary(modelo_logistico)
+
+# c.1) Fazendo predições (probabilidades)
+pred_prob_logistico <- predict(modelo_logistico, newdata = dados_teste, type = "response")
+
+# c.2) Convertendo para classes (usando 0.5 como limite de corte)
+pred_class_logistico <- ifelse(pred_prob_logistico > 0.5, 1, 0)
+
+# c.3) Gerando matriz de confusão
+matriz_confusao_logistico <- confusionMatrix(
+  data = factor(pred_class_logistico),
+  reference = factor(dados_teste$M),
+  positive = "1"
+)
+# c.4) Exibindo Matriz
+print(matriz_confusao_logistico)
+
+# d.1) Calculando a acurácia a partir da matriz de confusão
+acuracia_logistico <- sum(diag(matriz_confusao_logistico$table)) / sum(matriz_confusao_logistico$table)
+
+# d.2) Exibindo Acurácia
+cat("Acurácia da Regressão Logística:", acuracia_logistico, "ou", round(acuracia_logistico * 100, 2), "%\n")
+
+# b.1) Extraindo coeficientes e p-valores
+coef_logistico <- summary(modelo_logistico)$coefficients
+importancia_logistico <- abs(coef_logistico[-1, 1]) # Removendo o intercepto
+
+
+# b.2) Gráfico de importância
+barplot(importancia_logistico,
+        main = "Importância das Variáveis - Regressão Logística",
+        col = "purple",
+        horiz = TRUE,
+        las = 1,
+        xlab = "Coeficientes (valor absoluto)")
+
+###############################
+# 9 - predição de novos dados 
+###############################
+
+# Alterando variável M para fator nos conjuntos de dados de treino normalizados
+dados_treino_norm$M <- factor(dados_treino_norm$M, labels = c("Não", "Sim"))
+dados_teste_norm$M <- factor(dados_teste_norm$M, labels = c("Não", "Sim"))
+
+
+# Criando conjunto com novos dados
+novos_dados <- data.frame(V = 0.35, H = 0.51, S = 1.0)
+
+# Aplicando o modelo knn
+pred_knn_final <- knn(
+  train = dados_treino_norm[, -ncol(dados_treino_norm)],  
+  test = novos_dados,                        
+  cl = dados_treino_norm$M,                              
+  k = melhor_k                                           
+)
+
+# Exbindo resposta:
+cat("Predição para o novo local (v=0.35, h=0.51, s=1.0):", as.character(pred_knn_final), "\n")
