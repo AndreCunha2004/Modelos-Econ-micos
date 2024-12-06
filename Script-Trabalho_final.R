@@ -90,18 +90,37 @@ cat("Erro Médio Absoluto correspondente:R$", min(maes), "\n")
   # De um modelo para outro, limpe o workspace! "Global Environment"
   rm(list = ls())  # Remove todos os objetos
   gc()             # Libera memória
-
+  
+  #Após limpar, carregue novamente apenas os pacotes necessários
 
 # Carregue os dados originais novamente 
 data <- read_csv("C:/Users/andre/OneDrive/GRADUAÇÃO_ENPRO/ENPRO 4/Modelos Econômicos Quantitativos/Trabalho final/data.csv")
 
-# 1. pré-processamento dos dados
-data <- data %>% select(-total)
-data$type <- as.factor(data$type)
-data$district <- as.factor(data$district)
-data$address <- as.factor(data$address)
-data$rent <- as.factor(data$rent)
+#------------------Solucionando problema da base de dados enorme------------------#
+# 0. reduzindo pela metade o tamanho da base de dados
 
+# Seleciona aleatoria as linhas
+set.seed(7377)
+
+sorteio_geral <- sample(1:nrow(data), size = 0.5 * nrow(data)) # Calcula e arrendoda valor 
+
+# Atribui as linhas aleatórias ao novo conjunto de dados
+data <- data[sorteio_geral,] 
+#------------------------------------------------------#
+
+# 1. pré-processamento dos dados
+data <- data %>%
+  select(-total) %>%               # Remove a coluna "total"
+  mutate(
+    type = as.factor(type),        # Converte as variáveis para fator
+    district = as.factor(district),
+    address = as.factor(address),  
+    rent = cut(
+      as.numeric(rent), 
+      breaks = 3,                      # Divida em 3 categorias (ajuste conforme necessário)
+      labels = c("baixo", "médio", "alto")  # Renomeie as categorias
+    )
+  )
 # 2. Separando as amostras a proporção treino-teste (80-20)
 set.seed(7377)
 
@@ -124,8 +143,11 @@ matriz_confusao_nb <- confusionMatrix(
 print(matriz_confusao_nb)
 
 ######################################################
-# ATENÇÃO! - A MATRIZ DE CONFUSÃO NÃO carregou NO MEU PC
-                      #Ass: André
+# ATENÇÃO! - A MATRIZ DE CONFUSÃO NÃO carregou NO MEU PC (25/11)
+
+# A MATRIZ DE CONFUSÃO rodou depois que alterei a variável alvo de numérica
+  # Contínua para "Categórica" - Apesar de sucesso, não é o objtv do grp (26/11)
+                    #Ass: André
 #######################################################
 
 #-------------------------------------------------------#
@@ -180,7 +202,7 @@ print(matriz_confusao_nb)
       fill = "Frequência"
     ) +
     theme_classic()
-
+  
 ################################################
   # POUPE SEU TEMPO E VEJA O RESULTADO DO MÉTODO
 ################################################
@@ -196,18 +218,17 @@ cat("Acurácia do Naive Bayes:", acuracia_nb, "ou", round(acuracia_nb * 100, 2),
 rm(list = ls())  # Remove todos os objetos
 gc()             # Libera memória
 
-
 # Carregue os dados originais novamente 
 dados <- read_csv("C:/Users/andre/OneDrive/GRADUAÇÃO_ENPRO/ENPRO 4/Modelos Econômicos Quantitativos/Trabalho final/data.csv")
 
 # 1. pré-processamento dos dados
-dados <- dados %>%
-  select(-total) %>%              # Remover a variável 'total'
+dados <- dados[,c(-1,-8)]
+
+dados <- dados %>%             
   mutate(
-    type = as.factor(type),
-    district = as.factor(district),
-    address = as.factor(address),
-    rent = as.numeric(rent)       # Converter 'rent' para numérico
+    type = as.factor(type),               # Converter 'type' para fator
+    district = as.factor(district),       # Converter 'district' para fator
+    rent = as.numeric(rent)               # Converter 'rent' para numérico
   )
 
 # 2. Separando as amostras a proporção treino-teste (80-20)
@@ -222,22 +243,29 @@ dados_treino <- dados[sorteio, ]
 dados_teste <- dados[-sorteio, ]
 
 # 3. Ajustando modelo de Regressão Linear Múltipla
-modelo_rg <- lm(rent ~., data = dados_treino)
+modelo_rg <- lm(rent ~ area + bedrooms + garage + type, data = dados_treino)
 
 # 4. Exibindo o modelo
+cat("Resumo do modelo de regressão:\n")
 summary(modelo_rg)
 
 ######################################################
-# ATENÇÃO! - O MODELO NÃO carregou NO MEU PC
-#Ass: André
+# ATENÇÃO! - O MODELO NÃO carregou NO MEU PC (25/11)
+# Consegui rodar o modelo após retirar a variável address do conjunto de dados (26/11)
+                  #Ass: André
 #######################################################
+
+#-------------------------------------------#
+# RODOU APENAS QUANDO EU EXCLUI A VARIÁVEL district, no topico anterior
+  # Apresar de o R-squarer ter ido de 64% para 51%
+#-------------------------------------------#
 
 # 5. Fazendo predições no conjunto de teste
 pred_rent <- predict(modelo_rg, newdata = dados_teste)
 
-# 6. Calculando o erro médio absoluto (MAE) e outras métricas
+# 6. Calculando o erro médio absoluto (MAE) e outras métricas MAPE
 mae <- mean(abs(pred_rent - dados_teste$rent))
-cat("Erro Médio Absoluto (MAE):", mae, "\n")
+cat("Erro Médio Absoluto (MAE):R$", mae, "\n")
 
 # 7. Visualizando resultados reais vs preditos
 ggplot(data.frame(real = dados_teste$rent, predito = pred_rent), aes(x = real, y = predito)) +
@@ -252,55 +280,7 @@ ggplot(data.frame(real = dados_teste$rent, predito = pred_rent), aes(x = real, y
 
 # 8. Exibindo a relação entre predições e valores reais
 correlacao <- cor(dados_teste$rent, pred_rent)
-cat("Correlação entre valores reais e preditos:", correlacao, "\n")
+cat("Correlação entre valores reais e preditos:", correlacao, "ou", round(correlacao * 100,2), "%\n")
 
-##################################
-#OPEN AI
-##################################
 
-# 2. Pré-processamento dos dados
-dados <- dados %>%
-  select(-total) %>%              # Remover a variável 'total'
-  mutate(
-    type = as.factor(type),
-    district = as.factor(district),
-    address = as.factor(address),
-    rent = as.numeric(rent)       # Converter 'rent' para numérico
-  )
-
-# 3. Separar as amostras em treino (80%) e teste (20%)
-set.seed(7377)  # Semente para reprodutibilidade
-sorteio <- sample(1:nrow(dados), size = 0.8 * nrow(dados))
-dados_treino <- dados[sorteio, ]
-dados_teste <- dados[-sorteio, ]
-
-# 4. Ajustar o modelo de Regressão Linear
-modelo_rg <- lm(rent ~ ., data = dados_treino)
-
-# Exibir o resumo do modelo
-summary(modelo_rg)
-
-# 5. Fazer predições no conjunto de teste
-pred_rent <- predict(modelo_rg, newdata = dados_teste)
-
-# 6. Calcular métricas de erro
-mae <- mean(abs(pred_rent - dados_teste$rent))  # Erro Médio Absoluto
-cat("Erro Médio Absoluto (MAE):", mae, "\n")
-
-# 7. Visualizar os resultados
-# Gráfico de valores reais vs preditos
-resultado <- data.frame(real = dados_teste$rent, predito = pred_rent)
-ggplot(resultado, aes(x = real, y = predito)) +
-  geom_point(color = "blue") +
-  geom_abline(slope = 1, intercept = 0, color = "red") +
-  labs(
-    title = "Valores Reais vs Preditos",
-    x = "Valores Reais (rent)",
-    y = "Valores Preditos (rent)"
-  ) +
-  theme_classic()
-
-# Exibir a correlação entre os valores reais e preditos
-correlacao <- cor(dados_teste$rent, pred_rent)
-cat("Correlação entre valores reais e preditos:", correlacao, "\n")
-
+################################# FIM (26/11)###################################
